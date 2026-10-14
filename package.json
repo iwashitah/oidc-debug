@@ -1,0 +1,11 @@
+{
+  "name": "sca-pr-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frogbot auto-fix verification fixture",
+  "dependencies": {
+    "axios": "0.21.1",
+    "lodash": "4.17.20",
+    "minimist": "1.2.5"
+  }
+}
