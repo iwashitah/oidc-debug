@@ -1,0 +1,37 @@
+name: "Frogbot Scan Repository"
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+  security-events: write
+  id-token: write
+jobs:
+  scan-repository:
+    runs-on: ubuntu-latest
+    name: Scan Repository (${{ matrix.branch }} branch)
+    strategy:
+      matrix:
+        branch: [ "main" ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+      - name: Debug OIDC Token
+        run: |
+          OIDC_TOKEN=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=jfrog-ghec" | jq -r '.value')
+          echo "::add-mask::$OIDC_TOKEN"
+          echo $OIDC_TOKEN | cut -d. -f2 | base64 -di 2>/dev/null | jq . || true
+      - uses: jfrog/frogbot@v3
+        env:
+          JF_URL: ${{ secrets.JF_URL }}
+          JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JF_GIT_BASE_BRANCH: ${{ matrix.branch }}
+          JF_PROJECT_KEY: 'proj1'
+          JF_PROJECT: 'proj1'
+          JFROG_CLI_LOG_LEVEL: 'DEBUG'
+          CI: 'true'
+        with:
+          oidc-provider-name: github-artifactory
+          oidc-audience: jfrog-github
